@@ -1,0 +1,85 @@
+:root {
+  --color-text: black;
+  --color-btn-text: black;
+  --color-btn-bg: grey;
+}
+body {
+  margin: 0;
+  font-family: sans-serif;
+  transition: background 0.3s, color 0.3s;
+  min-height: 100vh;
+  color: var(--color-text);
+}
+body.theme-alien {
+  --color-text: red;
+  --color-btn-text: green;
+  --color-btn-bg: orange;
+  background: linear-gradient(135deg, #26a269 40%, #8ff0a4 67%);
+  color: var(--color-text);
+}
+
+
+body.theme-space {
+  --color-text: yellow;
+  --color-btn-text: #8b5cf6;
+  --color-btn-bg: lightblue;
+  background: linear-gradient(208deg, #1a5fb4 47%, #8b5cf6 55%);
+  color: var(--color-text);
+}
+.dropdown__item {
+  list-style-type: none;
+  padding: 10px;
+  color: #000000;
+  background-color: #ffffff;
+  cursor: pointer;
+  transition: background 0.3s ease;
+  text-align: center;
+  display: block;
+}
+.dropdown__item:hover {
+  background: var(--color-btn-bg);
+}
+ul {
+  margin: 0;
+  padding: 0;
+}
+#status {
+  text-align: center;
+  min-height: 20px;
+}
+#theme-switcher-button { 
+  position: relative;
+  padding: 10px 20px;
+  border: none;
+  cursor: pointer;
+  border-radius: 9999px;
+  color: var(--color-btn-text);
+  background: var(--color-btn-bg);
+  transition: background 0.3s ease;
+  box-shadow: 9px 4px 8px rgba(0, 0, 0, 0.2);
+}
+#theme-switcher-button:hover {
+  background: lightgrey;
+}
+
+
+#theme-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  overflow: hidden;
+  border-radius: 8px;
+  box-shadow: 9px 4px 8px rgba(0, 0, 0, 0.2);
+  width: 100%;
+}
+.switcher-wrapper {
+  position: relative;
+  display: inline-block;
+  margin: 20px 0px 0px 20px;
+}
+#status {
+  text-align: center;
+  min-height: 20px;
+  font-size: 1.5rem;
+}
+
