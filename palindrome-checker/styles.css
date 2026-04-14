@@ -9,9 +9,11 @@ html {
 }
 
 :root {
-    --dark-green: darkgreen;
-    --light-grey: #f5f6f7;
-    --golden-yellow: #fecc4c;
+    --forest-moss: #697a21;
+    --icy-aqua: #c5fffd;
+    --pale-slate: #bfb6bb;
+    --evergreen: #233329;
+    --ochre: #d17b0f;
 }
 
 body {
@@ -19,4 +21,53 @@ body {
     flex-direction: column;
     justify-content: center;
     align-items: center;
+    min-height: 100vh;
+    background: var(--pale-slate);
+}
+div {
+    background: var(--icy-aqua);
+    border-radius: 20px;
+    color: var(--ochre);
+    display:flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    padding: 20px 20px;
+    text-align: center;
+    box-shadow: 0 6px 6px var(--evergreen);
+    margin: 10px 0;
+    min-height: 100px;
+}
+header h1 {
+    color: var(--ochre);
+    font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+}
+.palindrome-definition {
+    padding: 20px 20px;
+    max-width: 340.133px;
+    background: var(--icy-aqua);
+    border-radius: 20px;
+    box-shadow: 0 6px 6px var(--evergreen);
+}
+#check-btn {
+    background: var(--forest-moss);
+    padding: 5px 12px;
+    border: none;
+    cursor: pointer;
+    border-radius: 20px;
+}
+#check-btn:hover {
+    background: var(--evergreen);
+}
+.palindrome-colored {
+    color: var(--ochre);
+    background: var(--forest-moss);
+}
+#text-input {
+    border: none;
+    border-bottom: 2px solid var(--evergreen);
+    height: 30px;
+    width: 250px;
+    font-size: 1.2rem;
 }
