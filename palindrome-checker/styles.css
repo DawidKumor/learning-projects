@@ -1,9 +1,22 @@
 html {
-	box-sizing: border-box;
+    box-sizing: border-box;
 }
 
 *,
 *:before,
 *:after {
-	box-sizing: inherit;
+    box-sizing: inherit;
+}
+
+:root {
+    --dark-green: darkgreen;
+    --light-grey: #f5f6f7;
+    --golden-yellow: #fecc4c;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
 }
