@@ -72,6 +72,32 @@ form.addEventListener("change", (e) => {
     }
 })
 form.addEventListener("submit", (e) => {
-  e.preventDefault();
-  isValid(validateForm());
-})
+  const result = validateForm();
+
+  if (!isValid(result)) {
+    e.preventDefault(); 
+
+    for (let key in result) {
+      if (result[key] === false) {
+        let elementToHighlight;
+
+        switch (key) {
+          case "complaints-group":
+            elementToHighlight = document.getElementById("complaints-group");
+            break;
+          case "solutions-group":
+            elementToHighlight = document.getElementById("solutions-group");
+            break;
+          default:
+            elementToHighlight = document.getElementById(key);
+        }
+
+        if (elementToHighlight) {
+          elementToHighlight.style.borderColor = "red";
+        }
+      }
+    }
+  } else {
+    // Form is valid, allow normal submission
+  }
+});
