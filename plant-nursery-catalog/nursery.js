@@ -42,8 +42,6 @@ catalog.set(hidcote, { small: 33, medium: 13, large: 18 });
 catalog.set(imperialGem, { small: 19, medium: 35, large: 28 });
 catalog.set(royalCrown, { small: 40, medium: 22, large: 9 });
 
-const removePlant = plant => catalog.delete(plant);
-
 const sellPlants = (plant, size, potsNo) => {
     if (!catalog.has(plant)) return "Item not found.";
     const name = `${plant.scientificName} '${plant.cultivar}'`
@@ -54,10 +52,25 @@ const sellPlants = (plant, size, potsNo) => {
     pots[size] -= potsNo;
     return `Catalog successfully updated.`
 }
-const displayCatalog = () => {
-    for (const entry of catalog.entries()) {
-        console.log(entry);
-    }
-}
 
-displayCatalog()
+const removePlant = plant => catalog.delete(plant);
+
+const displayCatalog = () => {
+    let catalogString = "";
+    catalog.forEach((val, key) => {
+        catalogString += `${key.scientificName} '${key.cultivar}': ${val.small} S, ${val.medium} M, ${val.large} L
+`
+    })
+    return catalogString
+}
+const displayPlantsSet = () => {
+    
+    const arr = [];
+    for (let commonName of catalog.keys()) {
+        arr.push(commonName.commonName);
+    }
+    const catalogSet = new Set(arr);
+    return catalogSet
+};
+const plantsSet = displayPlantsSet();
+console.log(plantsSet);
