@@ -21,11 +21,11 @@ function validateForm() {
     "complaints-group": false,
     "complaint-description": false,
     "solutions-group": false,
-    "solution-description":false
+    "solution-description": false
   };
 
   if (fullName.value !== "") {
-  obj["full-name"] = true;
+    obj["full-name"] = true;
   }
   const regexEmail = /^\w+@/i;
   if (email.value.match(regexEmail)) {
@@ -39,7 +39,7 @@ function validateForm() {
   if (productCode.value.match(regexProductsCode)) {
     obj["product-code"] = true;
   }
-  const regexQuantity= /^\+?[1-9]\d*$/;
+  const regexQuantity = /^\+?[1-9]\d*$/;
   if (quantity.value.match(regexQuantity) && Number(quantity.value) > 0) {
     obj["quantity"] = true;
   }
@@ -54,28 +54,28 @@ function validateForm() {
   }
 
 
-return obj;
+  return obj;
 }
 function isValid(obj) {
- return Object.values(obj).every(bin => bin)
+  return Object.values(obj).every(bin => bin)
 }
 
 form.addEventListener("change", (e) => {
   const object = validateForm();
   if (e.target.type === "radio") {
     e.target.closest('fieldset').style.borderColor = object["solutions-group"] ? "green" : "red";
-    
-    } else if (e.target.type === "checkbox") {
+
+  } else if (e.target.type === "checkbox") {
     e.target.closest('fieldset').style.borderColor = object["complaints-group"] ? "green" : "red";
-    } else {
-      e.target.style.borderColor = object[e.target.id] ? "green" : "red";
-    }
+  } else {
+    e.target.style.borderColor = object[e.target.id] ? "green" : "red";
+  }
 })
 form.addEventListener("submit", (e) => {
   const result = validateForm();
 
   if (!isValid(result)) {
-    e.preventDefault(); 
+    e.preventDefault();
 
     for (let key in result) {
       if (result[key] === false) {
