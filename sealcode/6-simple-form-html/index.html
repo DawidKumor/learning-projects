@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SimpleForm</title>
+    <link href="style.css" rel="stylesheet" type="text/css" />
+  </head>
+  <body>
+    <section class="form">
+      <form class="simple-form" action="">
+        <fieldset>
+          <legend>Simple Form</legend>
+          <label class="simple-form" for="petName">Pet name:</label>
+          <input
+            class="simple-form"
+            placeholder="Pet name"
+            id="petName"
+            name="petName"
+            type="text"
+            required
+          />
+          <label class="simple-form" for="petType">Type:</label>
+          <select class="simple-form" id="petType" name="petType" required>
+            <option value="dog">Dog</option>
+            <option value="cat">Cat</option>
+            <option value="lizzard">Lizzard</option>
+          </select>
+          <label class="simple-form" for="birthday">Birthday:</label>
+          <input
+            class="simple-form"
+            id="birthday"
+            name="birthday"
+            type="date"
+          />
+          <button type="submit">Submit</button>
+        </fieldset>
+      </form>
+    </section>
+  </body>
+</html>
