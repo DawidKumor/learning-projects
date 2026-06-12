@@ -40,6 +40,19 @@ app
     }
   });
 
+app
+  .route("/signup")
+  .get((req, res) => {
+    res.sendFile(__dirname + "/views/signup.html");
+  })
+  .post((req, res) => {
+    if (req.body.password.length < 8) {
+      return res.json({ error: "this password is too short" });
+    } else {
+      return res.json({ message: "Account created" });
+    }
+  });
+
 app.use(express.static("views"));
 
 app.listen(port, () => {
