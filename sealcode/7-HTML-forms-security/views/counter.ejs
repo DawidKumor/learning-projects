@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Counter</title>
+    <link rel="stylesheet" href="/styles.css" type="text/css" />
+  </head>
+  <body>
+    <h1>Count = <%= counter %></h1>
+    <form action="/counter/add" method="POST">
+      <button type="submit">+5</button>
+    </form>
+
+    <form action="/counter/multiply" method="POST">
+      <button type="submit">x5</button>
+    </form>
+  </body>
+</html>
