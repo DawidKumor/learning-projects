@@ -61,20 +61,24 @@ app
     }
   });
 
+let count = (cookie) => {
+  return cookie ? Number(cookie) : 0;
+};
+
 app.get("/counter", (req, res) => {
-  let counter = req.cookies.counter ? req.cookies.counter : 0;
+  let counter = count(req.cookies.counter);
   res.render("counter", { counter: counter });
 });
 
 app.post("/counter/add", (req, res) => {
-  let counter = req.cookies.counter ? req.cookies.counter : 0;
+  let counter = count(req.cookies.counter);
   counter = Number(counter) + 5;
   res.cookie("counter", counter);
   res.render("counter", { counter: counter });
 });
 
 app.post("/counter/multiply", (req, res) => {
-  let counter = req.cookies.counter ? req.cookies.counter : 0;
+  let counter = count(req.cookies.counter);
   counter = Number(counter) * 5;
   res.cookie("counter", counter);
   res.render("counter", { counter: counter });
