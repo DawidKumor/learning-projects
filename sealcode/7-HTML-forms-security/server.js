@@ -84,6 +84,86 @@ app.post("/counter/multiply", (req, res) => {
   res.render("counter", { counter: counter });
 });
 
+app.get("/start-game", (req, res) => {
+  res.sendFile(__dirname + "/views/game.html");
+});
+
+function hexArray(n) {
+  let arr = [];
+  for (let i = 0; i < n; i++) {
+    const r = Math.floor(Math.random() * 256)
+      .toString(16)
+      .padStart(2, "0");
+    const g = Math.floor(Math.random() * 256)
+      .toString(16)
+      .padStart(2, "0");
+    const b = Math.floor(Math.random() * 256)
+      .toString(16)
+      .padStart(2, "0");
+    arr.push(`#${r}${g}${b}`);
+  }
+  return arr;
+}
+
+app.post("/game", (req, res) => {
+  const n = parseFloat(req.body.n);
+  const hexArr = hexArray(n);
+  const correctColor = hexArr[Math.floor(Math.random() * n)];
+  const colors = hexArr
+    .map(
+      (
+        color,
+      ) => `<div style="height: 100px; width: 100px; background: ${color}"><p>${color}</p>
+    </div><form action="/check" method="POST">
+    <input type="hidden" name="chosenColor" value="${color}">
+    <input type="hidden" name="correctColor" value="${correctColor}">
+    <button type="submit" style="background: ${color}">My choice</button></form>`,
+    )
+    .join("");
+
+  res.send(`<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hex</title>
+</head>
+<body>
+<h1>Colors:</h1>
+<p>Pick one</p>
+    ${colors}
+</body>
+</html>`);
+});
+
+app.post("/check", (req, res) => {
+  if (req.body.chosenColor === req.body.correctColor) {
+    res.send(`<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hex</title>
+</head>
+<body>
+<h1 style="color: ${req.body.chosenColor}">Congratulations</h1>
+</body>
+</html>`);
+  } else {
+    res.send(`<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hex</title>
+</head>
+<body>
+<h1 style="color: ${req.body.chosenColor}; background: red">Game over</h1>
+</body>
+</html>`);
+  }
+});
+
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);
 });
