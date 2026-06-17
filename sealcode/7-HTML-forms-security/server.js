@@ -121,7 +121,6 @@ app.post("/game", (req, res) => {
     <button type="submit" style="background: ${color}">My choice</button></form>`,
     )
     .join("");
-  console.log(`${hexArr}`);
   res.send(`<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -138,7 +137,6 @@ app.post("/game", (req, res) => {
 });
 
 app.post("/check", (req, res) => {
-  console.log(req.body);
   if (req.body.chosenColor === req.body.correctColor) {
     res.send(`<!DOCTYPE html>
 <html lang="en">
