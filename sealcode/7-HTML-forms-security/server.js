@@ -117,10 +117,11 @@ app.post("/game", (req, res) => {
     </div><form action="/check" method="POST">
     <input type="hidden" name="chosenColor" value="${color}">
     <input type="hidden" name="correctColor" value="${correctColor}">
+    <input type="hidden" name="hexArr" value="${hexArr}">
     <button type="submit" style="background: ${color}">My choice</button></form>`,
     )
     .join("");
-
+  console.log(`${hexArr}`);
   res.send(`<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -137,6 +138,7 @@ app.post("/game", (req, res) => {
 });
 
 app.post("/check", (req, res) => {
+  console.log(req.body);
   if (req.body.chosenColor === req.body.correctColor) {
     res.send(`<!DOCTYPE html>
 <html lang="en">
@@ -150,6 +152,25 @@ app.post("/check", (req, res) => {
 </body>
 </html>`);
   } else {
+    const correctColor = req.body.correctColor;
+    const newHexArr = req.body.hexArr
+      .split(",")
+      .filter((color) => color !== req.body.chosenColor);
+    if (newHexArr.length === 1) {
+      return res.send("GAME OVER");
+    }
+    const colors = newHexArr
+      .map(
+        (
+          color,
+        ) => `<div style="height: 100px; width: 100px; background: ${color}"><p>${color}</p>
+    </div><form action="/check" method="POST">
+    <input type="hidden" name="chosenColor" value="${color}">
+    <input type="hidden" name="correctColor" value="${correctColor}">
+    <input type="hidden" name="hexArr" value="${newHexArr}">
+    <button type="submit" style="background: ${color}">My choice</button></form>`,
+      )
+      .join("");
     res.send(`<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -158,7 +179,9 @@ app.post("/check", (req, res) => {
     <title>Hex</title>
 </head>
 <body>
-<h1 style="color: ${req.body.chosenColor}; background: red">Game over</h1>
+<h1>Colors:</h1>
+<p>Pick one</p>
+    ${colors}
 </body>
 </html>`);
   }
