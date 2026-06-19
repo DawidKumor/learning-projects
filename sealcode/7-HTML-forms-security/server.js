@@ -185,6 +185,41 @@ app.post("/check", (req, res) => {
   }
 });
 
+app.get("/start", (req, res) => {
+  const n = Math.min(parseFloat(req.query.difficulty) || 5, 100);
+  const hexArr = hexArray(n);
+  const correctColor = hexArr[Math.floor(Math.random() * n)];
+  const colors = hexArr
+    .map(
+      (
+        color,
+      ) => `<div style="height: 100px; width: 100px; background: ${color}"><p>${color}</p>
+    </div><form action="/check" method="POST">
+    <input type="hidden" name="chosenColor" value="${color}">
+    <input type="hidden" name="correctColor" value="${correctColor}">
+    <input type="hidden" name="hexArr" value="${hexArr}">
+    <button type="submit" style="background: ${color}">My choice</button></form>`,
+    )
+    .join("");
+  res.send(`<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hex</title>
+</head>
+<body>
+<h1>Colors:</h1>
+<p>Pick one</p>
+    ${colors}
+</body>
+</html>`);
+});
+
+app.get("/set-name", (req, res) => {
+  res.sendFile(__dirname + `/views/set-name.html`);
+});
+
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);
 });
