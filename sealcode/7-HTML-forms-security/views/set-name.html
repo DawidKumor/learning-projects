@@ -6,6 +6,23 @@
     <title>Set-name</title>
   </head>
   <body>
-    <main>Jebać pis</main>
+    <main>
+      <form method="POST" action="">
+        <fieldset>
+          <legend>Create your username:</legend>
+          <label for="user">username:</label>
+          <input
+            id="user"
+            name="user"
+            type="text"
+            placeholder="username"
+            pattern=".{5,}"
+            title="Password must be at least 5 characters long"
+            required
+          />
+        </fieldset>
+        <button type="submit">Login</button>
+      </form>
+    </main>
   </body>
 </html>

@@ -216,9 +216,16 @@ app.get("/start", (req, res) => {
 </html>`);
 });
 
-app.get("/set-name", (req, res) => {
-  res.sendFile(__dirname + `/views/set-name.html`);
-});
+app
+  .route("/set-name")
+  .get((req, res) => {
+    res.sendFile(__dirname + `/views/set-name.html`);
+  })
+  .post((req, res) => {
+    if (req.body.user.length < 5) {
+      return res.json({ error: "this username is too short" });
+    }
+  });
 
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);
