@@ -239,7 +239,7 @@ app
       session[uuid] = req.body.user;
       const updatedData = JSON.stringify(session);
       await fs.writeFile(__dirname + "/sessions.json", updatedData);
-      res.cookie("id", uuid);
+      res.cookie("id", uuid, { httpOnly: true });
       res.redirect("/whoami");
     } catch (err) {
       console.error("Error:", err.message);
