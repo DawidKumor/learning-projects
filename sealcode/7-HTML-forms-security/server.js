@@ -216,16 +216,52 @@ app.get("/start", (req, res) => {
 </html>`);
 });
 
+const crypto = require("crypto");
+const fs = require("fs").promises;
+
 app
   .route("/set-name")
   .get((req, res) => {
     res.sendFile(__dirname + `/views/set-name.html`);
   })
-  .post((req, res) => {
+  .post(async (req, res) => {
     if (req.body.user.length < 5) {
       return res.json({ error: "this username is too short" });
     }
+    const uuid = crypto.randomUUID();
+    try {
+      const raw = await fs.readFile(__dirname + "/sessions.json", "utf8");
+      const session = JSON.parse(raw);
+      const obj = Object.values(session);
+      if (obj.includes(req.body.user)) {
+        return res.json({ error: "this username is occupied" });
+      }
+      session[uuid] = req.body.user;
+      const updatedData = JSON.stringify(session);
+      await fs.writeFile(__dirname + "/sessions.json", updatedData);
+      res.cookie("id", uuid);
+      res.redirect("/whoami");
+    } catch (err) {
+      console.error("Error:", err.message);
+      res.json({ error: err.message });
+    }
   });
+
+app.get("/whoami", async (req, res) => {
+  if (!req.cookies.id) {
+    return res.json({ error: "no session" });
+  }
+  try {
+    const raw = await fs.readFile(__dirname + "/sessions.json", "utf8");
+    const session = JSON.parse(raw);
+    const userName = session[req.cookies.id];
+    if (!userName) return res.json({ error: "invalid session" });
+    return res.send(`You are logged in as ${userName}`);
+  } catch (err) {
+    console.error("Error:", err.message);
+    res.json({ error: err.message });
+  }
+});
 
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);
