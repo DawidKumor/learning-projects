@@ -11,6 +11,9 @@ app.use(cookieParser());
 const ejs = require("ejs");
 app.set("view engine", "ejs");
 
+const crypto = require("crypto");
+const fs = require("fs").promises;
+
 app.use(express.static("views"));
 
 app
@@ -18,46 +21,43 @@ app
   .get((req, res) => {
     res.sendFile(__dirname + "/views/login.html");
   })
-  .post((req, res) => {
-    if (req.body.username === "admin" && req.body.password === "adminadmin") {
-      res.send(`<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-</head>
-<body>
-<h1>logged in!</h1>
-    
-</body>
-</html>`);
-    } else {
-      res.send(`<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-</head>
-<body>
-<h1>Wrong username or password</h1>
-    
-</body>
-</html>`);
-    }
+  .post(async (req, res) => {
+    const uuid = crypto.randomUUID();
   });
 
 app
-  .route("/signup")
+  .route("/register")
   .get((req, res) => {
     res.sendFile(__dirname + "/views/signup.html");
   })
-  .post((req, res) => {
+  .post(async (req, res) => {
     if (req.body.password.length < 8) {
-      return res.json({ error: "this password is too short" });
-    } else {
-      return res.json({ message: "Account created" });
+      return res.status(422).send("this password is too short");
+    }
+    const uuid = crypto.randomUUID();
+    try {
+      const raw = await fs.readFile(__dirname + "/users.json", "utf8");
+      const users = JSON.parse(raw);
+      const rawSession = await fs.readFile(
+        __dirname + "/sessions.json",
+        "utf8",
+      );
+      const sessions = JSON.parse(rawSession);
+      if (users.hasOwnProperty(req.body.username)) {
+        return res.status(422).send("this username is occupied");
+      }
+      users[req.body.username] = req.body.password;
+      sessions[uuid] = req.body.username;
+      const updateUsers = JSON.stringify(users);
+      await fs.writeFile(__dirname + "/users.json", updateUsers);
+      const updateSessions = JSON.stringify(sessions);
+      await fs.writeFile(__dirname + "/sessions.json", updateSessions);
+
+      res.cookie("id", uuid, { httpOnly: true });
+      res.status(200).send("<h1>Zarejestrowano!</h1>");
+    } catch (err) {
+      console.error("Error:", err.message);
+      res.status(500).send(err.message);
     }
   });
 
@@ -216,10 +216,7 @@ app.get("/start", (req, res) => {
 </html>`);
 });
 
-const crypto = require("crypto");
-const fs = require("fs").promises;
-
-app
+/*app
   .route("/set-name")
   .get((req, res) => {
     res.sendFile(__dirname + `/views/set-name.html`);
@@ -245,7 +242,7 @@ app
       console.error("Error:", err.message);
       res.json({ error: err.message });
     }
-  });
+  });*/
 
 app.get("/whoami", async (req, res) => {
   if (!req.cookies.id) {
