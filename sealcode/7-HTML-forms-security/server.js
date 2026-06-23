@@ -23,6 +23,13 @@ app
   })
   .post(async (req, res) => {
     const uuid = crypto.randomUUID();
+    try {
+      const raw = await fs.readFile(__dirname + "/users.json", "utf8");
+      const users = JSON.parse(raw);
+      if (!users.hasOwnProperty(req.body.username)) {
+        return res.status(422).send("invalid username");
+      }
+    } catch {}
   });
 
 app
