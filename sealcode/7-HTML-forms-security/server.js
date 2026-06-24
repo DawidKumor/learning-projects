@@ -26,10 +26,26 @@ app
     try {
       const raw = await fs.readFile(__dirname + "/users.json", "utf8");
       const users = JSON.parse(raw);
+      const rawSession = await fs.readFile(
+        __dirname + "/sessions.json",
+        "utf8",
+      );
+      const sessions = JSON.parse(rawSession);
       if (!users.hasOwnProperty(req.body.username)) {
         return res.status(422).send("invalid username");
       }
-    } catch {}
+      if (req.body.password !== users[req.body.username]) {
+        return res.status(422).send("invalid password");
+      }
+      sessions[uuid] = req.body.username;
+      const updateSessions = JSON.stringify(sessions);
+      await fs.writeFile(__dirname + "/sessions.json", updateSessions);
+      res.cookie("id", uuid, { httpOnly: true });
+      res.status(200).send("<h1>Logged in</h1>");
+    } catch (err) {
+      console.error("Error:", err.message);
+      res.status(500).send(err.message);
+    }
   });
 
 app
@@ -61,12 +77,31 @@ app
       await fs.writeFile(__dirname + "/sessions.json", updateSessions);
 
       res.cookie("id", uuid, { httpOnly: true });
-      res.status(200).send("<h1>Zarejestrowano!</h1>");
+      res.status(200).send("<h1>Registered</h1>");
     } catch (err) {
       console.error("Error:", err.message);
       res.status(500).send(err.message);
     }
   });
+
+app.get("/logout", async (req, res) => {
+  try {
+    const raw = await fs.readFile(__dirname + "/sessions.json", "utf8");
+    const sessions = JSON.parse(raw);
+    const cookie = req.cookies.id;
+    if (!cookie || !sessions[cookie]) {
+      return res.status(401).send("Nie jesteś zalogowany");
+    }
+    delete sessions[cookie];
+    const updatedSession = JSON.stringify(sessions);
+    await fs.writeFile(__dirname + "/sessions.json", updatedSession);
+    res.clearCookie("id");
+    res.status(200).send("<h1>Logout</h1>");
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).send(error.message);
+  }
+});
 
 let count = (cookie) => {
   return cookie ? Number(cookie) : 0;
