@@ -10,8 +10,9 @@ app.use(cookieParser());
 
 const ejs = require("ejs");
 app.set("view engine", "ejs");
-
+const util = require("util");
 const crypto = require("crypto");
+const pbkdf2 = util.promisify(crypto.pbkdf2);
 const fs = require("fs").promises;
 
 app.use(express.static("views"));
@@ -32,10 +33,20 @@ app
       );
       const sessions = JSON.parse(rawSession);
       if (!users.hasOwnProperty(req.body.username)) {
-        return res.status(422).send("invalid username");
+        return res.status(422).send("invalid username or password");
       }
-      if (req.body.password !== users[req.body.username]) {
-        return res.status(422).send("invalid password");
+      const salt = users[req.body.username].salt;
+      const hash = users[req.body.username].hash;
+      const userKey = await pbkdf2(
+        req.body.password,
+        salt,
+        100000,
+        64,
+        "sha512",
+      );
+      const userHash = userKey.toString("hex");
+      if (userHash !== hash) {
+        return res.status(422).send("invalid username or password");
       }
       sessions[uuid] = req.body.username;
       const updateSessions = JSON.stringify(sessions);
@@ -58,6 +69,7 @@ app
       return res.status(422).send("this password is too short");
     }
     const uuid = crypto.randomUUID();
+    const salt = crypto.randomBytes(16).toString("hex");
     try {
       const raw = await fs.readFile(__dirname + "/users.json", "utf8");
       const users = JSON.parse(raw);
@@ -69,7 +81,11 @@ app
       if (users.hasOwnProperty(req.body.username)) {
         return res.status(422).send("this username is occupied");
       }
-      users[req.body.username] = req.body.password;
+      const key = await pbkdf2(req.body.password, salt, 100000, 64, "sha512");
+      const hash = key.toString("hex");
+      users[req.body.username] = {};
+      users[req.body.username]["salt"] = salt;
+      users[req.body.username]["hash"] = hash;
       sessions[uuid] = req.body.username;
       const updateUsers = JSON.stringify(users);
       await fs.writeFile(__dirname + "/users.json", updateUsers);
