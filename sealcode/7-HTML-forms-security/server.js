@@ -224,16 +224,16 @@ app
 
 app.get("/logout", async (req, res) => {
   try {
-    const raw = await fs.readFile(__dirname + "/sessions.json", "utf8");
-    const sessions = JSON.parse(raw);
-    const cookie = req.cookies.id;
-    if (!cookie || !sessions[cookie]) {
+    const client = await get_db_connection();
+    const db = client.db(dbName);
+    const sessions = db.collection("sessions");
+    const cookie = req.cookies.sessionId;
+    const session = await sessions.findOne({ sessionId: cookie });
+    if (!cookie || !session) {
       return res.status(401).send("Nie jesteś zalogowany");
     }
-    delete sessions[cookie];
-    const updatedSession = JSON.stringify(sessions);
-    await fs.writeFile(__dirname + "/sessions.json", updatedSession);
-    res.clearCookie("id");
+    await sessions.deleteOne({ sessionId: cookie });
+    res.clearCookie("sessionId");
     res.status(200).send("<h1>Logout</h1>");
   } catch (error) {
     console.error(error.message);
