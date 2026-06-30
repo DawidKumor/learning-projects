@@ -28,14 +28,14 @@ const dbName = "myProject";
 
 let db_connection;
 
-function get_db_connection() {
+async function get_db_connection() {
   db_connection = db_connection ? db_connection : client.connect();
   return db_connection;
 }
 
 app.use(express.static("views"));
 
-app
+/* app
   .route("/login")
   .get((req, res) => {
     res.sendFile(__dirname + "/views/login.html");
@@ -75,9 +75,51 @@ app
       console.error("Error:", err.message);
       res.status(500).send(err.message);
     }
-  });
+  }); */
 
 app
+  .route("/login")
+  .get((req, res) => {
+    res.sendFile(__dirname + "/views/login.html");
+  })
+  .post(async (req, res) => {
+    const uuid = crypto.randomUUID();
+    try {
+      const client = await get_db_connection();
+      const db = client.db(dbName);
+      const users = db.collection("users");
+      const sessions = db.collection("sessions");
+      const user = await users.findOne({ username: req.body.username });
+      if (!user) {
+        return res.status(422).send("invalid username or password");
+      }
+      const salt = user.password.salt;
+      const hash = user.password.hash;
+      const userKey = await pbkdf2(
+        req.body.password,
+        salt,
+        100000,
+        64,
+        "sha512",
+      );
+      const userHash = userKey.toString("hex");
+      if (userHash !== hash) {
+        return res.status(422).send("invalid username or password");
+      }
+      await sessions.insertOne({
+        sessionId: uuid,
+        username: req.body.username,
+        usersId: user._id,
+      });
+      res.cookie("sessionId", uuid, { httpOnly: true });
+      res.status(200).send("<h1>Logged in</h1>");
+    } catch (err) {
+      console.error("Error:", err.message);
+      res.status(500).send(err.message);
+    }
+  });
+
+/* app
   .route("/register")
   .get((req, res) => {
     res.sendFile(__dirname + "/views/signup.html");
@@ -116,7 +158,69 @@ app
       console.error("Error:", err.message);
       res.status(500).send(err.message);
     }
+  }); */
+
+app
+  .route("/register")
+  .get((req, res) => {
+    res.sendFile(__dirname + "/views/signup.html");
+  })
+  .post(async (req, res) => {
+    if (req.body.password.length < 8) {
+      return res.status(422).send("this password is too short");
+    }
+    const uuid = crypto.randomUUID();
+    const salt = crypto.randomBytes(16).toString("hex");
+    try {
+      const client = await get_db_connection();
+      const db = client.db(dbName);
+      const users = db.collection("users");
+      const sessions = db.collection("sessions");
+      const existing = await users.findOne({ username: req.body.username });
+      if (existing) {
+        return res.status(422).send("this username is occupied");
+      }
+      const key = await pbkdf2(req.body.password, salt, 100000, 64, "sha512");
+      const hash = key.toString("hex");
+      const result = await users.insertOne({
+        username: req.body.username,
+        password: {
+          salt: salt,
+          hash: hash,
+        },
+      });
+      await sessions.insertOne({
+        sessionId: uuid,
+        username: req.body.username,
+        usersId: result.insertedId,
+      });
+
+      res.cookie("sessionId", uuid, { httpOnly: true });
+      res.status(200).send("<h1>Registered</h1>");
+    } catch (err) {
+      console.error("Error:", err.message);
+      res.status(500).send(err.message);
+    }
   });
+
+/* app.get("/logout", async (req, res) => {
+  try {
+    const raw = await fs.readFile(__dirname + "/sessions.json", "utf8");
+    const sessions = JSON.parse(raw);
+    const cookie = req.cookies.id;
+    if (!cookie || !sessions[cookie]) {
+      return res.status(401).send("Nie jesteś zalogowany");
+    }
+    delete sessions[cookie];
+    const updatedSession = JSON.stringify(sessions);
+    await fs.writeFile(__dirname + "/sessions.json", updatedSession);
+    res.clearCookie("id");
+    res.status(200).send("<h1>Logout</h1>");
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).send(error.message);
+  }
+}); */
 
 app.get("/logout", async (req, res) => {
   try {
