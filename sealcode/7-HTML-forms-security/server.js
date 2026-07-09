@@ -451,6 +451,40 @@ app.get("/whoami", async (req, res) => {
   }
 });
 
+app.get("/start-multiplayer", async (req, res) => {
+  const sessionId = req.cookies.sessionId;
+
+  if (!sessionId) {
+    return res.redirect(302, "/login");
+  }
+
+  const client = await get_db_connection();
+  const db = client.db(dbName);
+  const sessions = db.collection("sessions");
+  const games = db.collection("games");
+
+  const session = await sessions.findOne({ sessionId: sessionId });
+
+  if (!session) {
+    return res.redirect(302, "/login");
+  }
+
+  const gameId = crypto.randomUUID();
+
+  await games.insertOne({
+    gameId: gameId,
+    players: [session.username, null],
+    currentTurn: null,
+    moves: [],
+    winner: null,
+    status: "waiting",
+  });
+
+  res.send(
+    `Game created! Send this link to the other player: /join-multiplayer-game?game_id=${gameId}`,
+  );
+});
+
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);
 });
