@@ -485,6 +485,80 @@ app.get("/start-multiplayer", async (req, res) => {
   );
 });
 
+app.get("/join-multiplayer-game", async (req, res) => {
+  const sessionId = req.cookies.sessionId;
+  if (!sessionId) {
+    return res.redirect(302, "/login");
+  }
+
+  const gameId = req.query.game_id;
+
+  res.send(`
+    <h1>Dołączasz do gry: ${gameId}</h1>
+    <form method="POST" action="/join-multiplayer-game">
+      <input type="hidden" name="game_id" value="${gameId}" />
+      <button type="submit">Join this game</button>
+    </form>
+  `);
+});
+
+app.post("/join-multiplayer-game", async (req, res) => {
+  const sessionId = req.cookies.sessionId;
+  if (!sessionId) {
+    return res.redirect(302, "/login");
+  }
+
+  const client = await get_db_connection();
+  const db = client.db(dbName);
+  const sessions = db.collection("sessions");
+  const games = db.collection("games");
+
+  const session = await sessions.findOne({ sessionId: sessionId });
+  if (!session) {
+    return res.redirect(302, "/login");
+  }
+
+  const gameId = req.body.game_id;
+  const username = session.username;
+
+  const game = await games.findOne({ gameId: gameId });
+
+  if (!game) {
+    return res.status(404).send("Gra nie istnieje");
+  }
+
+  if (game.players.includes(username)) {
+    return res.status(422).send("Już jesteś w tej grze");
+  }
+
+  const emptySlotIndex = game.players.indexOf(null);
+  if (emptySlotIndex === -1) {
+    return res.status(422).send("Gra jest już pełna");
+  }
+
+  const updatedPlayers = [...game.players];
+  updatedPlayers[emptySlotIndex] = username;
+
+  const isGameFull = !updatedPlayers.includes(null);
+  const randomFirstPlayer =
+    updatedPlayers[Math.floor(Math.random() * updatedPlayers.length)];
+
+  await games.updateOne(
+    { gameId: gameId },
+    {
+      $set: {
+        players: updatedPlayers,
+        status: isGameFull ? "active" : "waiting",
+        currentTurn: isGameFull ? randomFirstPlayer : null,
+      },
+    },
+  );
+
+  res.send(
+    `Dołączono do gry! Status: ${isGameFull ? "gra rozpoczęta" : "czekam na drugiego gracza"}`,
+  );
+});
+
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);
 });
