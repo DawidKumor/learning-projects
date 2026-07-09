@@ -5,6 +5,8 @@ const port = 3000;
 //app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.urlencoded({ extended: false }));
 
+const middleware = require("./middleware"); //checking if user is logged in
+
 const cookieParser = require("cookie-parser");
 app.use(cookieParser());
 
@@ -29,7 +31,15 @@ const dbName = "myProject";
 let db_connection;
 
 async function get_db_connection() {
-  db_connection = db_connection ? db_connection : client.connect();
+  if (!db_connection) {
+    db_connection = client.connect().then(async (connectedClient) => {
+      const db = connectedClient.db(dbName);
+      await db
+        .collection("users")
+        .createIndex({ username: 1 }, { unique: true }); // unique index
+      return connectedClient;
+    });
+  }
   return db_connection;
 }
 
@@ -79,10 +89,10 @@ app.use(express.static("views"));
 
 app
   .route("/login")
-  .get((req, res) => {
+  .get(middleware, (req, res) => {
     res.sendFile(__dirname + "/views/login.html");
   })
-  .post(async (req, res) => {
+  .post(middleware, async (req, res) => {
     const uuid = crypto.randomUUID();
     try {
       const client = await get_db_connection();
@@ -162,10 +172,10 @@ app
 
 app
   .route("/register")
-  .get((req, res) => {
+  .get(middleware, (req, res) => {
     res.sendFile(__dirname + "/views/signup.html");
   })
-  .post(async (req, res) => {
+  .post(middleware, async (req, res) => {
     if (req.body.password.length < 8) {
       return res.status(422).send("this password is too short");
     }
@@ -177,9 +187,7 @@ app
       const users = db.collection("users");
       const sessions = db.collection("sessions");
       const existing = await users.findOne({ username: req.body.username });
-      if (existing) {
-        return res.status(422).send("this username is occupied");
-      }
+
       const key = await pbkdf2(req.body.password, salt, 100000, 64, "sha512");
       const hash = key.toString("hex");
       const result = await users.insertOne({
@@ -198,6 +206,9 @@ app
       res.cookie("sessionId", uuid, { httpOnly: true });
       res.status(200).send("<h1>Registered</h1>");
     } catch (err) {
+      if (err.code === 11000) {
+        return res.status(422).send("this username is occupied");
+      }
       console.error("Error:", err.message);
       res.status(500).send(err.message);
     }
