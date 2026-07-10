@@ -543,6 +543,14 @@ app.post("/join-multiplayer-game", async (req, res) => {
   const randomFirstPlayer =
     updatedPlayers[Math.floor(Math.random() * updatedPlayers.length)];
 
+  let colors = game.colors;
+  let correctColor = game.correctColor;
+
+  if (isGameFull) {
+    colors = hexArray(6);
+    correctColor = colors[Math.floor(Math.random() * colors.length)];
+  }
+
   await games.updateOne(
     { gameId: gameId },
     {
@@ -550,6 +558,8 @@ app.post("/join-multiplayer-game", async (req, res) => {
         players: updatedPlayers,
         status: isGameFull ? "active" : "waiting",
         currentTurn: isGameFull ? randomFirstPlayer : null,
+        colors: colors,
+        correctColor: correctColor,
       },
     },
   );
@@ -557,6 +567,114 @@ app.post("/join-multiplayer-game", async (req, res) => {
   res.send(
     `Dołączono do gry! Status: ${isGameFull ? "gra rozpoczęta" : "czekam na drugiego gracza"}`,
   );
+});
+
+app.get("/multiplayer-game", async (req, res) => {
+  const sessionId = req.cookies.sessionId;
+  if (!sessionId) {
+    return res.redirect(302, "/login");
+  }
+
+  const client = await get_db_connection();
+  const db = client.db(dbName);
+  const sessions = db.collection("sessions");
+  const games = db.collection("games");
+
+  const session = await sessions.findOne({ sessionId: sessionId });
+  if (!session) {
+    return res.redirect(302, "/login");
+  }
+
+  const gameId = req.query.game_id;
+  const game = await games.findOne({ gameId: gameId });
+
+  if (!game) {
+    return res.status(404).send("Gra nie istnieje");
+  }
+
+  const username = session.username;
+
+  if (game.status === "waiting") {
+    return res.send("Czekamy na drugiego gracza. Odśwież stronę za chwilę.");
+  }
+
+  if (game.status === "finished") {
+    return res.send(`<h1>Koniec gry! Wygrał: ${game.winner}</h1>`);
+  }
+
+  const chosenColors = game.moves.map((move) => move.color);
+
+  const buttons = game.colors
+    .map((color) => {
+      const alreadyChosen = chosenColors.includes(color);
+      return `<form method="POST" action="/multiplayer-game/move">
+        <input type="hidden" name="game_id" value="${gameId}" />
+        <input type="hidden" name="color" value="${color}" />
+        <button type="submit" style="background: ${color}" ${alreadyChosen ? "disabled" : ""}>
+          ${color}
+        </button>
+      </form>`;
+    })
+    .join("");
+
+  res.send(`
+    <h1>Twoja tura: ${game.currentTurn === username ? "TAK" : "NIE - czekaj"}</h1>
+    <p>Historia ruchów: ${JSON.stringify(game.moves)}</p>
+    ${buttons}
+  `);
+});
+
+app.post("/multiplayer-game/move", async (req, res) => {
+  const sessionId = req.cookies.sessionId;
+  if (!sessionId) {
+    return res.redirect(302, "/login");
+  }
+
+  const client = await get_db_connection();
+  const db = client.db(dbName);
+  const sessions = db.collection("sessions");
+  const games = db.collection("games");
+
+  const session = await sessions.findOne({ sessionId: sessionId });
+  if (!session) {
+    return res.redirect(302, "/login");
+  }
+
+  const username = session.username;
+  const gameId = req.body.game_id;
+  const chosenColor = req.body.color;
+
+  const game = await games.findOne({ gameId: gameId });
+
+  if (!game || game.status !== "active") {
+    return res.status(422).send("Gra nie jest aktywna");
+  }
+
+  if (game.currentTurn !== username) {
+    return res.status(403).send("To nie Twoja tura!");
+  }
+
+  const alreadyChosen = game.moves.some((move) => move.color === chosenColor);
+  if (alreadyChosen) {
+    return res.status(422).send("Ten kolor już był wybrany");
+  }
+
+  const isWinningMove = chosenColor === game.correctColor;
+  const otherPlayer = game.players.find((player) => player !== username);
+
+  const update = {
+    $push: { moves: { username: username, color: chosenColor } },
+  };
+
+  if (isWinningMove) {
+    update.$set = { status: "finished", winner: username };
+  } else {
+    update.$set = { currentTurn: otherPlayer };
+  }
+
+  await games.updateOne({ gameId: gameId }, update);
+
+  res.redirect(`/multiplayer-game?game_id=${gameId}`);
 });
 
 app.listen(port, () => {
