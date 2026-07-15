@@ -1,3 +1,5 @@
+const { get_db_connection, dbName } = require("./db");
+
 async function checkAuth(req, res, next) {
   const sessionId = req.cookies.sessionId; // cookie or undefined;
   try {

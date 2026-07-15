@@ -16,33 +16,7 @@ const util = require("util");
 const crypto = require("crypto");
 const pbkdf2 = util.promisify(crypto.pbkdf2);
 const fs = require("fs").promises;
-
-const { MongoClient } = require("mongodb");
-// or as an es module:
-// import { MongoClient } from 'mongodb'
-
-// Connection URL
-const url = "mongodb://localhost:27017";
-const client = new MongoClient(url);
-
-// Database Name
-const dbName = "myProject";
-
-let db_connection;
-
-async function get_db_connection() {
-  if (!db_connection) {
-    db_connection = client.connect().then(async (connectedClient) => {
-      const db = connectedClient.db(dbName);
-      await db
-        .collection("users")
-        .createIndex({ username: 1 }, { unique: true }); // unique index
-      return connectedClient;
-    });
-  }
-  return db_connection;
-}
-
+const { get_db_connection, dbName } = require("./db");
 app.use(express.static("views"));
 
 /* app
